@@ -1,0 +1,3 @@
+[submodule "lib/irkit-cli"]
+	path = lib/irkit-cli
+	url = git@github.com:otf/irkit-cli.git
