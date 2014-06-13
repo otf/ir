@@ -1,4 +1,9 @@
 ﻿[<EntryPoint>]
 let main argv = 
-  printfn "%A" argv
-  0
+  match argv with
+  | [| "--version" |] ->
+    printf "1.0.0.0"
+    0
+  | _ ->
+    printf "help"
+    0
