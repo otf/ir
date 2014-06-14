@@ -8,6 +8,7 @@ open IrKit
 let uncurry f = (<||) f
 let runIO = Async.RunSynchronously
 let getLine = async { return System.Console.ReadLine() }
+let print x = async { printf "%s" x}
 
 [<EntryPoint>]
 let main argv = 
@@ -30,7 +31,7 @@ let main argv =
       let! env = env
       let! line = getLine
       let input = line |> JsonValue.Parse |> fromJSON
-      return! input |> choice (printf "%s" >> result) (env |> uncurry send)
+      return! input |> choice print (env |> uncurry send)
     }
     |> runIO
 
