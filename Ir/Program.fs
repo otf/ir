@@ -1,6 +1,7 @@
 ﻿open FsControl.Core.Types
 open FSharpPlus
 open System
+open System.Reflection
 open System.Net.Http
 open System.Json
 open Fleece
@@ -10,6 +11,19 @@ let uncurry f = (<||) f
 let run (Kleisli f) = f () |> Async.RunSynchronously
 let getLine = async { return System.Console.ReadLine() }
 let print x = async { printf "%O" x}
+
+let printHelp = print """
+usage: ir [--version] [--help]
+          <command> [<args>]
+
+commands are:
+  recv  receive a message, and print the message to standard output.
+  send  read a message from standard input, and send the message.
+"""
+
+let printVersion = 
+  Assembly.GetExecutingAssembly().GetName().Version
+  |> print
 
 let application env = function
   | [| "recv" |] ->
@@ -23,10 +37,10 @@ let application env = function
     >>>> (Kleisli print |||| Kleisli send) 
 
   | [| "--version" |] ->
-    Kleisli <| konst (print "1.0.0.0")
+    Kleisli <| konst (printVersion)
 
   | _ ->
-    Kleisli <| konst (print "help")
+    Kleisli <| konst (printHelp)
 
 [<EntryPoint>]
 let main argv = 
