@@ -31,10 +31,8 @@ let application env = function
 [<EntryPoint>]
 let main argv = 
   let env = monad {
-    let http = new HttpClient()
     let! devices = lookup zeroconfResolver
-    let device = devices |> List.head
-    return (http, device)
+    return (new HttpClient(), devices |> List.head)
   }
 
   run (application env argv)
