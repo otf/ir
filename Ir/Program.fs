@@ -21,7 +21,8 @@ let main argv =
 
   match argv with
   | [| "recv" |] ->
-    (uncurry receive) =<< env
+    env
+    >>= uncurry receive
     |> runIO
     |> toJSON
     |> printf "%O"
