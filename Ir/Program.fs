@@ -6,11 +6,13 @@ open Fleece
 open IrKit
 
 let uncurry f = (<||) f
+let runIO = Async.RunSynchronously
+let getLine = async { return System.Console.ReadLine() }
 
 [<EntryPoint>]
 let main argv = 
-  let env = async {
-    use http = new HttpClient()
+  let env = monad {
+    let http = new HttpClient()
     let! devices = lookup zeroconfResolver
     let device = devices |> List.head
     return (http, device)
@@ -19,17 +21,18 @@ let main argv =
   match argv with
   | [| "recv" |] ->
     (uncurry receive) =<< env
-    |> Async.RunSynchronously
+    |> runIO
     |> toJSON
-    |> printfn "%O"
+    |> printf "%O"
 
   | [| "send" |] ->
-    async {
+    monad {
       let! env = env
-      let input = Console.ReadLine() |> JsonValue.Parse |> fromJSON
+      let! line = getLine
+      let input = line |> JsonValue.Parse |> fromJSON
       return! input |> choice (printf "%s" >> result) (env |> uncurry send)
     }
-    |> Async.RunSynchronously
+    |> runIO
 
   | [| "--version" |] ->
     printf "1.0.0.0"
