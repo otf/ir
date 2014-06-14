@@ -1,4 +1,5 @@
-﻿open FSharpPlus
+﻿open FsControl.Core.Types
+open FSharpPlus
 open System
 open System.Net.Http
 open System.Json
@@ -7,8 +8,9 @@ open IrKit
 
 let uncurry f = (<||) f
 let runIO = Async.RunSynchronously
+let run (Kleisli f) = f () |> runIO
 let getLine = async { return System.Console.ReadLine() }
-let print x = async { printf "%s" x}
+let print x = async { printf "%O" x}
 
 [<EntryPoint>]
 let main argv = 
@@ -21,24 +23,23 @@ let main argv =
 
   match argv with
   | [| "recv" |] ->
-    env
-    >>= uncurry receive
-    |> runIO
-    |> toJSON
-    |> printf "%O"
+    Kleisli <| konst (env >>= (uncurry receive))
+    >>>> Kleisli (toJSON >> print)
+    |> run
 
   | [| "send" |] ->
-    monad {
-      let! env = env
-      let! line = getLine
-      let input = line |> JsonValue.Parse |> fromJSON
-      return! input |> choice print (env |> uncurry send)
-    }
-    |> runIO
+    let send = fun msg -> ((uncurry send) <!> env) >>= ((|>) msg)
+    Kleisli (konst getLine)
+    >>>> Kleisli (JsonValue.Parse >> fromJSON >> result) 
+    >>>> (Kleisli print |||| Kleisli send) 
+    |> run
 
   | [| "--version" |] ->
-    printf "1.0.0.0"
+    print "1.0.0.0" 
+    |> runIO
+
   | _ ->
-    printf "help"
+    print "help"
+    |> runIO
   
   0
