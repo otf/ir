@@ -7,8 +7,7 @@ open Fleece
 open IrKit
 
 let uncurry f = (<||) f
-let runIO = Async.RunSynchronously
-let run (Kleisli f) = f () |> runIO
+let run (Kleisli f) = f () |> Async.RunSynchronously
 let getLine = async { return System.Console.ReadLine() }
 let print x = async { printf "%O" x}
 
